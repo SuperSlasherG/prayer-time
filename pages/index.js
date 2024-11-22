@@ -40,7 +40,7 @@ export default function Home() {
           <h3>Masjids Nearby:</h3>
           <ul>
             {masjids.map((masjid, index) => (
-              <li key={index}>{masjid.name} - {masjid.vicinity}</li>
+              <li key={index}>{masjid.name} - {masjid.address}</li>
             ))}
           </ul>
           <h3>Prayer Times:</h3>
