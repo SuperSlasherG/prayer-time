@@ -82,3 +82,4 @@ const PrayerTimesPage = () => {
 };
 
 export default PrayerTimesPage;
+
