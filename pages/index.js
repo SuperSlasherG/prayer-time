@@ -8,7 +8,7 @@ export default function Home() {
 
   // Function to fetch the city name from latitude and longitude
   const getCityFromCoordinates = async (latitude, longitude) => {
-    const apiKey = "YOUR_OPENCAGE_API_KEY"; // Replace with your OpenCage API key
+    const apiKey = "b02a6ab6b76d4327865baaba2c100d6b"; // Replace with your OpenCage API key
     try {
       const response = await fetch(
         `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}`
