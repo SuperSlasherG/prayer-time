@@ -4,6 +4,7 @@ const PrayerTimesPage = () => {
   const [city, setCity] = useState('');
   const [error, setError] = useState('');
   const [prayerTimes, setPrayerTimes] = useState(null);
+  const [dateInfo, setDateInfo] = useState(null);
 
   const apiKey = 'b02a6ab6b76d4327865baaba2c100d6b'; // Your OpenCage API key
 
@@ -18,7 +19,7 @@ const PrayerTimesPage = () => {
           `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}`
         );
         const data = await response.json();
-        
+
         if (data.results.length > 0) {
           const city = data.results[0].components.city || data.results[0].components.town;
           if (city) {
@@ -45,6 +46,7 @@ const PrayerTimesPage = () => {
 
     if (data.code === 200 && data.status === "OK") {
       setPrayerTimes(data.data.timings);
+      setDateInfo(data.data.date); // Store the date information for display
     } else {
       setError("Failed to fetch prayer times.");
     }
@@ -57,14 +59,20 @@ const PrayerTimesPage = () => {
   return (
     <div>
       <h1>Prayer Times for {city}</h1>
+      {dateInfo && (
+        <p>
+          <strong>Date:</strong> {dateInfo.gregorian.date} ({dateInfo.gregorian.weekday.en}, {dateInfo.gregorian.month.en} {dateInfo.gregorian.year})
+        </p>
+      )}
       {prayerTimes ? (
         <ul>
-          <li>Fajr: {prayerTimes.Fajr}</li>
-          <li>Sunrise: {prayerTimes.Sunrise}</li>
-          <li>Dhuhr: {prayerTimes.Dhuhr}</li>
-          <li>Asr: {prayerTimes.Asr}</li>
-          <li>Maghrib: {prayerTimes.Maghrib}</li>
-          <li>Isha: {prayerTimes.Isha}</li>
+          <li><strong>Fajr:</strong> {prayerTimes.Fajr}</li>
+          <li><strong>Sunrise:</strong> {prayerTimes.Sunrise}</li>
+          <li><strong>Dhuhr:</strong> {prayerTimes.Dhuhr}</li>
+          <li><strong>Asr:</strong> {prayerTimes.Asr}</li>
+          <li><strong>Sunset:</strong> {prayerTimes.Sunset}</li>
+          <li><strong>Maghrib:</strong> {prayerTimes.Maghrib}</li>
+          <li><strong>Isha:</strong> {prayerTimes.Isha}</li>
         </ul>
       ) : (
         <p>Loading prayer times...</p>
