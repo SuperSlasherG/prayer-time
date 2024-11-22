@@ -1,85 +1,76 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from 'react';
 
-export default function Home() {
+const PrayerTimesPage = () => {
+  const [city, setCity] = useState('');
+  const [error, setError] = useState('');
   const [prayerTimes, setPrayerTimes] = useState(null);
-  const [error, setError] = useState(null);
-  const [city, setCity] = useState(""); // Store the city name
-  const [loading, setLoading] = useState(true);
 
-  // Function to fetch the city name from latitude and longitude
-  const getCityFromCoordinates = async (latitude, longitude) => {
-    const apiKey = "b02a6ab6b76d4327865baaba2c100d6b"; // Replace with your OpenCage API key
-    try {
-      const response = await fetch(
-        `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}`
-      );
-      const data = await response.json();
-      if (data.results.length > 0) {
-        const city = data.results[0].components.city || data.results[0].components.town;
-        setCity(city);
-        return city;
-      } else {
-        throw new Error("City not found");
-      }
-    } catch (error) {
-      setError("Failed to fetch city: " + error.message);
-      return null;
-    }
-  };
+  const apiKey = 'b02a6ab6b76d4327865baaba2c100d6b'; // Your OpenCage API key
 
-  // Fetch prayer times based on the user's location
   useEffect(() => {
+    // Get the user's location from browser geolocation
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        const cityName = await getCityFromCoordinates(latitude, longitude);
-        if (cityName) {
-          try {
-            // Fetch prayer times from your API using the city name
-            const response = await fetch(`/api/prayer-times?city=${cityName}`);
-            if (!response.ok) {
-              throw new Error("Failed to fetch prayer times");
-            }
 
-            // Parse and set the prayer times
-            const data = await response.json();
-            setPrayerTimes(data.data.timings); // Assuming this structure in the API response
-          } catch (err) {
-            setError("Failed to fetch prayer times: " + err.message);
+        // Get city name from coordinates using OpenCage API
+        const response = await fetch(
+          `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}`
+        );
+        const data = await response.json();
+        
+        if (data.results.length > 0) {
+          const city = data.results[0].components.city || data.results[0].components.town;
+          if (city) {
+            setCity(city);
+            getPrayerTimes(city); // Fetch prayer times after getting the city
+          } else {
+            setError("City not found in the geocoding response.");
           }
+        } else {
+          setError("City not found in the geocoding response.");
         }
-        setLoading(false);
       },
-      (err) => {
-        setError("Failed to get location: " + err.message);
-        setLoading(false);
-      }
+      (error) => setError("Failed to get geolocation.")
     );
   }, []);
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+  // Fetch prayer times using Aladhan API based on the city
+  const getPrayerTimes = async (city) => {
+    const formattedCity = city.replace(" ", "+"); // Replace spaces in city names with '+'
+    const prayerApiUrl = `http://api.aladhan.com/v1/timingsByCity?city=${formattedCity}&country=GB&method=2`; // Assuming country is GB for now
+
+    const response = await fetch(prayerApiUrl);
+    const data = await response.json();
+
+    if (data.code === 200 && data.status === "OK") {
+      setPrayerTimes(data.data.timings);
+    } else {
+      setError("Failed to fetch prayer times.");
+    }
+  };
 
   if (error) {
-    return <p>Error: {error}</p>;
-  }
-
-  if (!prayerTimes) {
-    return <p>No prayer times available</p>;
+    return <div>{error}</div>;
   }
 
   return (
     <div>
       <h1>Prayer Times for {city}</h1>
-      <ul>
-        {/* Loop through the timings and display each prayer time */}
-        {Object.entries(prayerTimes).map(([prayer, time]) => (
-          <li key={prayer}>
-            {prayer}: {time}
-          </li>
-        ))}
-      </ul>
+      {prayerTimes ? (
+        <ul>
+          <li>Fajr: {prayerTimes.Fajr}</li>
+          <li>Sunrise: {prayerTimes.Sunrise}</li>
+          <li>Dhuhr: {prayerTimes.Dhuhr}</li>
+          <li>Asr: {prayerTimes.Asr}</li>
+          <li>Maghrib: {prayerTimes.Maghrib}</li>
+          <li>Isha: {prayerTimes.Isha}</li>
+        </ul>
+      ) : (
+        <p>Loading prayer times...</p>
+      )}
     </div>
   );
-}
+};
+
+export default PrayerTimesPage;
